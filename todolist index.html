@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista To-Do</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for a cleaner look, overriding some Tailwind defaults if needed */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light blue-gray background */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align items to the start of the flex container */
+            min-height: 100vh;
+            padding: 20px; /* Add some padding around the content */
+            box-sizing: border-box; /* Include padding in element's total width and height */
+        }
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background-color: #ffffff;
+            border-radius: 1.5rem; /* More rounded corners */
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            padding: 2.5rem; /* Increased padding */
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem; /* Spacing between sections */
+        }
+        .task-input-section {
+            display: flex;
+            gap: 1rem;
+        }
+        .task-input {
+            flex-grow: 1;
+            padding: 0.75rem 1rem;
+            border: 2px solid #cbd5e1; /* Slightly darker border */
+            border-radius: 0.75rem; /* Rounded input */
+            font-size: 1.125rem; /* Larger font size */
+            outline: none;
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .task-input:focus {
+            border-color: #6366f1; /* Indigo focus color */
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); /* Soft shadow on focus */
+        }
+        .add-button {
+            padding: 0.75rem 1.5rem;
+            background-color: #6366f1; /* Indigo */
+            color: white;
+            border-radius: 0.75rem; /* Rounded button */
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .add-button:hover {
+            background-color: #4f46e5; /* Darker indigo on hover */
+            transform: translateY(-1px); /* Slight lift on hover */
+        }
+        .add-button:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+        .task-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem; /* Spacing between list items */
+        }
+        .task-item {
+            display: flex;
+            align-items: center;
+            background-color: #f8fafc; /* Lighter background for items */
+            padding: 1rem 1.25rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            transition: background-color 0.2s ease-in-out;
+        }
+        .task-item:hover {
+            background-color: #eff6ff; /* Even lighter blue on hover */
+        }
+        .task-text {
+            flex-grow: 1;
+            font-size: 1.1rem;
+            color: #334155; /* Darker text color */
+            cursor: pointer; /* Indicate clickability */
+        }
+        .task-text.completed {
+            text-decoration: line-through;
+            color: #94a3b8; /* Lighter grey for completed tasks */
+        }
+        .task-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .action-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.25rem; /* Larger icon size */
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+        }
+        .action-button:hover {
+            background-color: #e2e8f0; /* Light gray hover */
+        }
+        .complete-button {
+            color: #22c55e; /* Green for complete */
+        }
+        .complete-button.completed {
+             color: #ef4444; /* Red for incomplete */
+        }
+        .delete-button {
+            color: #ef4444; /* Red for delete */
+        }
+
+        /* Responsive adjustments for smaller screens */
+        @media (max-width: 640px) {
+            .container {
+                padding: 1.5rem;
+                border-radius: 1rem;
+            }
+            .task-input-section {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+            .add-button {
+                width: 100%;
+            }
+            .task-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+                padding: 0.75rem 1rem;
+            }
+            .task-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-start justify-center min-h-screen p-8">
+    <div class="container bg-white p-10 rounded-3xl shadow-xl flex flex-col gap-6">
+        <h1 class="text-4xl font-extrabold text-center text-gray-800 mb-4">To-Do List</h1>
+
+        <div class="task-input-section">
+            <input
+                type="text"
+                id="newTaskInput"
+                placeholder="Aggiungi un nuovo compito..."
+                class="task-input"
+            />
+            <button id="addTaskButton" class="add-button">Aggiungi Compito</button>
+        </div>
+
+        <ul id="taskList" class="task-list">
+            <!-- Task items will be dynamically added here -->
+        </ul>
+    </div>
+
+    <script>
+        // Ottieni riferimenti agli elementi del DOM
+        const newTaskInput = document.getElementById('newTaskInput');
+        const addTaskButton = document.getElementById('addTaskButton');
+        const taskList = document.getElementById('taskList');
+
+        // Funzione per caricare i compiti dal localStorage
+        function loadTasks() {
+            const tasks = JSON.parse(localStorage.getItem('todos')) || [];
+            tasks.forEach(task => addTaskToDOM(task.text, task.completed));
+        }
+
+        // Funzione per salvare i compiti nel localStorage
+        function saveTasks() {
+            const tasks = [];
+            taskList.querySelectorAll('.task-item').forEach(item => {
+                tasks.push({
+                    text: item.querySelector('.task-text').textContent,
+                    completed: item.classList.contains('completed')
+                });
+            });
+            localStorage.setItem('todos', JSON.stringify(tasks));
+        }
+
+        // Funzione per aggiungere un compito al DOM
+        function addTaskToDOM(taskText, isCompleted = false) {
+            if (!taskText.trim()) return; // Non aggiungere compiti vuoti
+
+            const listItem = document.createElement('li');
+            listItem.classList.add(
+                'task-item',
+                'flex', 'items-center', 'justify-between', 'bg-white', 'p-4', 'rounded-xl', 'shadow-sm', 'transition', 'duration-200', 'ease-in-out',
+                'hover:bg-blue-50'
+            );
+            if (isCompleted) {
+                listItem.classList.add('completed');
+            }
+
+            const taskTextSpan = document.createElement('span');
+            taskTextSpan.textContent = taskText;
+            taskTextSpan.classList.add('task-text', 'flex-grow', 'text-lg', 'text-gray-700', 'cursor-pointer');
+            if (isCompleted) {
+                taskTextSpan.classList.add('completed');
+            }
+
+            const actionsDiv = document.createElement('div');
+            actionsDiv.classList.add('task-actions', 'flex', 'gap-2', 'ml-4');
+
+            // Icona per Font Awesome (necessaria per le icone)
+            // Se le icone non vengono visualizzate, assicurati che la CDN di Font Awesome sia inclusa nell'head
+            // Per questo esempio, useremo un fallback testuale o emoji se non si vuole includere Font Awesome.
+            // In questo caso, stiamo usando un'icona "check" e "trash" da Font Awesome,
+            // quindi assicurati di aver aggiunto <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+            // al tuo head. Per semplicità, non l'ho inclusa per evitare un'altra CDN, ma sarebbe il passo successivo.
+            // Useremo un placeholder per ora: &#10003; per spunta e &#128465; per cestino.
+
+            const completeButton = document.createElement('button');
+            completeButton.classList.add('action-button', 'complete-button', 'text-2xl', 'p-2', 'rounded-full', 'hover:bg-green-100');
+            completeButton.innerHTML = isCompleted ? '<i class="fas fa-undo"></i>' : '<i class="fas fa-check-circle"></i>'; // Icona di annullamento se completato, altrimenti spunta
+            completeButton.title = isCompleted ? 'Marca come non completato' : 'Marca come completato';
+
+
+            completeButton.onclick = (e) => {
+                e.stopPropagation(); // Previene il click sull'elemento padre (listItem)
+                listItem.classList.toggle('completed');
+                taskTextSpan.classList.toggle('completed');
+                // Aggiorna l'icona del pulsante completo
+                completeButton.innerHTML = listItem.classList.contains('completed') ? '<i class="fas fa-undo"></i>' : '<i class="fas fa-check-circle"></i>';
+                completeButton.title = listItem.classList.contains('completed') ? 'Marca come non completato' : 'Marca come completato';
+                saveTasks();
+            };
+
+            const deleteButton = document.createElement('button');
+            deleteButton.classList.add('action-button', 'delete-button', 'text-2xl', 'p-2', 'rounded-full', 'hover:bg-red-100');
+            deleteButton.innerHTML = '<i class="fas fa-trash-alt"></i>'; // Icona del cestino
+            deleteButton.title = 'Rimuovi compito';
+
+            deleteButton.onclick = (e) => {
+                e.stopPropagation(); // Previene il click sull'elemento padre (listItem)
+                listItem.remove();
+                saveTasks();
+            };
+
+            actionsDiv.appendChild(completeButton);
+            actionsDiv.appendChild(deleteButton);
+
+            listItem.appendChild(taskTextSpan);
+            listItem.appendChild(actionsDiv);
+
+            taskList.appendChild(listItem);
+        }
+
+        // Gestione dell'aggiunta di un compito tramite il pulsante
+        addTaskButton.addEventListener('click', () => {
+            addTaskToDOM(newTaskInput.value);
+            newTaskInput.value = ''; // Pulisce l'input
+            saveTasks();
+        });
+
+        // Gestione dell'aggiunta di un compito tramite il tasto Invio
+        newTaskInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addTaskButton.click(); // Simula un click sul pulsante Aggiungi
+            }
+        });
+
+        // Event listener per marcare come completato/non completato cliccando sul testo del compito
+        taskList.addEventListener('click', (e) => {
+            const taskTextElement = e.target.closest('.task-text');
+            if (taskTextElement) {
+                const listItem = taskTextElement.closest('.task-item');
+                listItem.classList.toggle('completed');
+                taskTextElement.classList.toggle('completed');
+
+                // Trova il pulsante completo all'interno dello stesso listItem e aggiorna la sua icona
+                const completeButton = listItem.querySelector('.complete-button');
+                if (completeButton) {
+                    completeButton.innerHTML = listItem.classList.contains('completed') ? '<i class="fas fa-undo"></i>' : '<i class="fas fa-check-circle"></i>';
+                    completeButton.title = listItem.classList.contains('completed') ? 'Marca come non completato' : 'Marca come completato';
+                }
+                saveTasks();
+            }
+        });
+
+
+        // Carica i compiti all'avvio della pagina
+        document.addEventListener('DOMContentLoaded', () => {
+             // Link a Font Awesome per le icone (aggiunto dinamicamente per mostrare come)
+            const fontAwesomeLink = document.createElement('link');
+            fontAwesomeLink.rel = 'stylesheet';
+            fontAwesomeLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css';
+            document.head.appendChild(fontAwesomeLink);
+            loadTasks();
+        });
+    </script>
+</body>
+</html>
